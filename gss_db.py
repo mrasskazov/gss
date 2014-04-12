@@ -53,15 +53,27 @@ creds = parser.add_argument('-w', '--worksheet-name',
 # db command
 subparsers = parser.add_subparsers(help='DB command')
 # insert
-db_insert = subparsers.add_parser('insert', help='insert row')
+db_insert = subparsers.add_parser('insert',
+                                  help='insert row with specified columns')
+db_columns = db_insert.add_argument('-c', '--col',
+                                    action='append',
+                                    help='pair column-title="column value". '
+                                    'Can be specified multiple times')
+#TODO: второй вариант - добавить subparser для каждой пары col=val, и
+#   попробовать добавить такой subparser в db_insert с action='append'
+# добавить -c для каждой команды в цикле for. для update после цикла
+#   добавить еще subparser 'to'
 # need to add multiple supparsers with -c key=value
-db_insert.add_argument('-c', '--column-name', help='column name for insert')
+#db_row = db_insert.add_subparsers(help='row data')
+#db_columns = db_insert.add_argument('-c', '--col', action='append')
+#db_insert.add_argument('-c', '--col-name', help='col name for insert')
 #db_update = subparsers.add_parser('update', help='update row')
 #db_delete = subparsers.add_parser('delete', help='delete row')
 
 #(options, args) = parser.parse_args()
 import pprint
 pprint.pprint(parser.parse_args())
+exit(1)
 
 
 def main():
