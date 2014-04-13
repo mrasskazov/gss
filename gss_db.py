@@ -34,31 +34,31 @@ GOOGLE_SPREADSHEET = os.environ.get(
     '0Auqi3YThSgB5dGZyTWNSWmQzbXJfRmJpcjVSSGhUZWc')
 GOOGLE_WORKSHEET = 'od6'
 
-parser = argparse.ArgumentParser(description='Utility for working with Google'
-                                 'Spreadsheet as a database')
+parser = argparse.ArgumentParser(description='Utility for working with Google '
+                                 'Spreadsheet like with a database')
 # credentials
-creds = parser.add_argument('-u', '--username',
-                            help='Google username',
-                            default=GOOGLE_LOGIN)
-creds = parser.add_argument('-p', '--password',
-                            help='Google password',
-                            default=GOOGLE_PASSWORD)
-creds = parser.add_argument('-s', '--spreadsheet-id',
-                            help='Google spreadsheet ID',
-                            default=GOOGLE_SPREADSHEET)
-creds = parser.add_argument('-w', '--worksheet-name',
-                            help='Google worksheet name',
-                            default=GOOGLE_WORKSHEET)
+parser.add_argument('-u', '--username',
+                    help='Google username',
+                    default=GOOGLE_LOGIN)
+parser.add_argument('-p', '--password',
+                    help='Google password',
+                    default=GOOGLE_PASSWORD)
+parser.add_argument('-s', '--spreadsheet-id',
+                    help='Google spreadsheet ID',
+                    default=GOOGLE_SPREADSHEET)
+parser.add_argument('-w', '--worksheet-name',
+                    help='Google worksheet name',
+                    default=GOOGLE_WORKSHEET)
 
 # db command
 subparsers = parser.add_subparsers(help='DB command')
 # insert
 db_insert = subparsers.add_parser('insert',
                                   help='insert row with specified columns')
-db_columns = db_insert.add_argument('-c', '--col',
-                                    action='append',
-                                    help='pair column-title="column value". '
-                                    'Can be specified multiple times')
+db_insert.add_argument('-c', '--col',
+                       action='append',
+                       help='pair column-title="column value". '
+                       'Can be specified multiple times')
 #TODO: второй вариант - добавить subparser для каждой пары col=val, и
 #   попробовать добавить такой subparser в db_insert с action='append'
 # добавить -c для каждой команды в цикле for. для update после цикла
@@ -71,29 +71,28 @@ db_columns = db_insert.add_argument('-c', '--col',
 #db_delete = subparsers.add_parser('delete', help='delete row')
 
 #(options, args) = parser.parse_args()
+
 import pprint
-pprint.pprint(parser.parse_args())
-exit(1)
+#pprint.pprint(parser.parse_args())
+#exit(1)
+
+options = parser.parse_args()
+#pprint.pprint(options.col)
+row = dict()
+for c in options.col:
+    key, value = c.split('=')[0:2]
+    row[key] = value
+pprint.pprint(row)
 
 
 def main():
     SSService = spreadsheet_service.SpreadsheetsService()
-    SSService.email = GOOGLE_LOGIN
-    SSService.password = GOOGLE_PASSWORD
-    #SSService.source = 'We are writing data'
+    SSService.email = options.username
+    SSService.password = options.password
     SSService.ProgrammaticLogin()
-    #import pudb; pudb.set_trace()
     #ws = SSService.GetWorksheetsFeed(key=GOOGLE_SPREADSHEET)
     #ls = SSService.GetListFeed(key=GOOGLE_SPREADSHEET)
-    #import pudb; pudb.set_trace()
-    SSService.InsertRow({'datetime': str(datetime.datetime.utcnow()),
-                         'project': 'openstack/nova',
-                         'commiter': getpass.getuser(),
-                         'change-request': 'https://gerrit.mirantis.com/13885',
-                         'how-it-works': 'it works fine',
-                         },
-                        GOOGLE_SPREADSHEET,
-                        GOOGLE_WORKSHEET)
+    SSService.InsertRow(row, GOOGLE_SPREADSHEET, GOOGLE_WORKSHEET)
     return 0
 
 
