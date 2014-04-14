@@ -11,18 +11,6 @@ import gdata.spreadsheet.service as spreadsheet_service
 
 #TODO:
 # 1. storing of credentials in config file (~/.config/gdrive/creds)
-# 2. CLI parameters
-#       creds:
-#           -u --username
-#           -p --password
-#       speadsheet:
-#           -s --spreadsheet-id
-#           -w --worksheet-name
-#       commands:
-#           insert row_name=row_value row_name=row_value ...
-#           update row_name=row_value row_name=row_value ... to
-#                   row_name=row_value row_name=row_value ...
-#           delete row_name=row_value row_name=row_value ...
 # gss_db.py -s -w insert name="Known User" salary=35000
 # gss_db.py -s -w update name="Known User" to salary=42000
 
@@ -53,24 +41,25 @@ parser.add_argument('-w', '--worksheet-name',
 # db command
 subparsers = parser.add_subparsers(help='DB command')
 # insert
-db_insert = subparsers.add_parser('insert',
-                                  help='insert row with specified columns')
-db_insert.add_argument('-c', '--col',
-                       action='append',
-                       help='pair column-title="column value". '
-                       'Can be specified multiple times')
+insert_parser = subparsers.add_parser('insert',
+                                      help='insert row with specified columns')
+# update
+update_parser = subparsers.add_parser('update',
+                                      help='update specified row')
+update_to_subparser = update_parser.add_subparsers()
+update_to_data = update_to_subparser.add_parser('to',
+                                                help='new row data')
+# delete
+delete_parser = subparsers.add_parser('delete',
+                                      help='delete specified row')
+# column specification for all commands
+for p in (insert_parser, update_parser, update_to_data, delete_parser):
+    p.add_argument('-c', '--col',
+                   action='append',
+                   help='pair column-title="column value". '
+                   'Can be specified multiple times')
 #TODO: второй вариант - добавить subparser для каждой пары col=val, и
-#   попробовать добавить такой subparser в db_insert с action='append'
-# добавить -c для каждой команды в цикле for. для update после цикла
-#   добавить еще subparser 'to'
-# need to add multiple supparsers with -c key=value
-#db_row = db_insert.add_subparsers(help='row data')
-#db_columns = db_insert.add_argument('-c', '--col', action='append')
-#db_insert.add_argument('-c', '--col-name', help='col name for insert')
-#db_update = subparsers.add_parser('update', help='update row')
-#db_delete = subparsers.add_parser('delete', help='delete row')
-
-#(options, args) = parser.parse_args()
+#   попробовать добавить такой subparser в insert_parser с action='append'
 
 import pprint
 #pprint.pprint(parser.parse_args())
@@ -80,9 +69,9 @@ options = parser.parse_args()
 #pprint.pprint(options.col)
 row = dict()
 for c in options.col:
-    key, value = c.split('=')[0:2]
+    key, value = c.split('=', 1)
     row[key] = value
-pprint.pprint(row)
+#pprint.pprint(row)
 
 
 def main():
@@ -90,10 +79,21 @@ def main():
     SSService.email = options.username
     SSService.password = options.password
     SSService.ProgrammaticLogin()
-    #ws = SSService.GetWorksheetsFeed(key=GOOGLE_SPREADSHEET)
-    #ls = SSService.GetListFeed(key=GOOGLE_SPREADSHEET)
-    SSService.InsertRow(row, GOOGLE_SPREADSHEET, GOOGLE_WORKSHEET)
-    return 0
+
+    insert(SSService, options.spreadsheet_id, options.worksheet_name)
+    pass
+
+
+def insert(SSService, spreadsheet_id, worksheet_name):
+    SSService.InsertRow(row, spreadsheet_id, worksheet_name)
+
+
+def update(SSService, spreadsheet_id, worksheet_name):
+    pass
+
+
+def delete(SSService, spreadsheet_id, worksheet_name):
+    pass
 
 
 if __name__ == '__main__':
