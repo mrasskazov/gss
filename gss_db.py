@@ -9,10 +9,8 @@ import sys
 
 import gdata.spreadsheet.service as spreadsheet_service
 
-GOOGLE_SPREADSHEET = os.environ.get(
-    'GOOGLE_SPREADSHEET',
-    '0Auqi3YThSgB5dGZyTWNSWmQzbXJfRmJpcjVSSGhUZWc')
-GOOGLE_WORKSHEET = 'od6'
+#GOOGLE_SPREADSHEET = os.environ.get('GOOGLE_SPREADSHEET')
+#GOOGLE_WORKSHEET = os.environ.get('GOOGLE_WORKSHEET')
 
 CONFIG = dict()
 
@@ -20,13 +18,11 @@ CONFIG = dict()
 def config(key, unset=False):
 
     conf_dir_name = '~/.config/gss_db'
-    conf_file_name = conf_dir_name + '/gss_db.conf'
-
-    config_file = os.path.expanduser(conf_file_name)
+    conf_file_name = os.path.expanduser(conf_dir_name + '/gss_db.conf')
     parser = ConfigParser.ConfigParser()
 
-    if os.path.isfile(config_file):
-        parser.read(config_file)
+    if os.path.isfile(conf_file_name):
+        parser.read(conf_file_name)
     else:
         print 'no config file found, generating it'
         if not os.path.isdir(os.path.expanduser(conf_dir_name)):
@@ -44,16 +40,17 @@ def config(key, unset=False):
         CONFIG[key] = parser.get('general', key)
         return parser.get('general', key)
     elif key == 'username':
-        user = raw_input('enter username:')
-        CONFIG['username'] = user
-        parser.set('general', 'username', user)
+        username = raw_input('enter username:')
+        CONFIG['username'] = username
+        parser.set('general', 'username', username)
     elif key == 'password':
         password = getpass.getpass('enter password:')
         CONFIG['password'] = password
         parser.set('general', 'password', password)
 
-    with open(config_file, 'wb') as conf_file:
+    with open(conf_file_name, 'wb') as conf_file:
         parser.write(conf_file)
+
     return CONFIG[key]
 
 
@@ -68,12 +65,10 @@ def get_argparser():
                                      description='Utility for working with '
                                      'Google Spreadsheet like with a database')
     # credentials
-    parser.add_argument('-s', '--spreadsheet-id',
-                        help='Google spreadsheet ID',
-                        default=GOOGLE_SPREADSHEET)
-    parser.add_argument('-w', '--worksheet-name',
-                        help='Google worksheet name',
-                        default=GOOGLE_WORKSHEET)
+    parser.add_argument('spreadsheet_id',
+                        help='Google spreadsheet ID')
+    parser.add_argument('worksheet_name',
+                        help='Google worksheet name')
 
     subparsers = parser.add_subparsers(help='command')
     # insert
@@ -104,8 +99,16 @@ def main():
     SSService.email = config('username')
     SSService.password = config('password')
     SSService.ProgrammaticLogin()
+    feed = SSService.GetWorksheetsFeed(key=options.spreadsheet_id)
+    for f in feed.entry:
+        if f.title.text == options.worksheet_name:
+            worksheet_id = f.id.text.rsplit('/', 1)[1]
+            break
 
-    insert(row, SSService, options.spreadsheet_id, options.worksheet_name)
+    if options.worksheet_name is not None:
+        insert(row, SSService, options.spreadsheet_id, worksheet_id)
+    else:
+        sys.exit('Worksheet name is not provided')
 
 
 if __name__ == '__main__':
