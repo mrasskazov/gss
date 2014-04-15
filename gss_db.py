@@ -76,7 +76,8 @@ def get_argparser():
         'insert',
         help='insert row with specified columns')
     insert_parser.add_argument(
-        '-c', '--col',
+        'columns',
+        nargs='+',
         action='append',
         help='pair column-title="column value". Can be specified few times')
     return parser
@@ -91,7 +92,7 @@ def main():
         sys.exit(str(ex))
 
     row = dict()
-    for c in options.col:
+    for c in options.columns[0]:
         key, value = c.split('=', 1)
         row[key] = value
 
