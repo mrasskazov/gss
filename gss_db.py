@@ -105,11 +105,15 @@ def main():
         if f.title.text == options.worksheet_name:
             worksheet_id = f.id.text.rsplit('/', 1)[1]
             break
-
-    if options.worksheet_name is not None:
-        insert(row, SSService, options.spreadsheet_id, worksheet_id)
     else:
-        sys.exit('Worksheet name is not provided')
+        ws = SSService.AddWorksheet(
+            options.worksheet_name, 1, len(row), options.spreadsheet_id)
+        worksheet_id = ws.id.text.rsplit('/', 1)[1]
+        for c, cn in zip(row.keys(), xrange(1, len(row.keys()) + 1)):
+            SSService.UpdateCell(1, cn, c,
+                                 options.spreadsheet_id, worksheet_id)
+
+    insert(row, SSService, options.spreadsheet_id, worksheet_id)
 
 
 if __name__ == '__main__':
